@@ -1,4 +1,4 @@
-import {Suspense} from 'react';
+import {Suspense, useEffect, useState} from 'react';
 import {Await, NavLink, useAsyncValue} from '@remix-run/react';
 import {useAnalytics, useOptimisticCart} from '@shopify/hydrogen';
 import {useAside} from '~/components/Aside';
@@ -8,20 +8,79 @@ import {useAside} from '~/components/Aside';
  */
 export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
   const {shop, menu} = header;
+  const [isScrolled,setIsScrolled] = useState(false);
+  const [isScrollingUp, setIsScrollingUp] = useState(false);
+  const [lastScrollingY,setLastScrollingY] = useState(0);
+  const {asideType} = useAside();
+  useEffect(()=>{
+    const root = document.documentElement;
+
+    root.style.setProperty('--announcement-height', isScrolled ? '0px' : '40px');
+    root.style.setProperty('--header-height', isScrolled ? '64px' : '80px');
+
+    const handleScroll = () =>{
+      if(asideType !== 'closed') return;
+
+      const currentScrollY = window.scrollY;
+      setIsScrollingUp(currentScrollY < lastScrollingY);
+      setLastScrollingY(currentScrollY);
+      setIsScrolled(currentScrollY > 50)
+    }
+
+    window.addEventListener('scroll', handleScroll, {passive:true});
+    return ()=> window.removeEventListener('scroll',handleScroll);
+
+  },[isScrolled,lastScrollingY,asideType])
   return (
-    <header className="header">
-      <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
-        <strong>{shop.name}</strong>
-      </NavLink>
-      <HeaderMenu
-        menu={menu}
-        viewport="desktop"
-        primaryDomainUrl={header.shop.primaryDomain.url}
-        publicStoreDomain={publicStoreDomain}
-      />
-      <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
+    <div className={`fixed w-full z-40 transition-transform duration-500 ease-in-out
+    ${!isScrollingUp && isScrolled && asideType === 'closed' ? '-translate-y-full':'translate-y-0'}`}>
+
+      {/* Announcement Bar */}
+      <div className={`overflow-hidden transition-all duration-500 ease-in-out bg-black text-white ${isScrolled ? 'max-h-0' : 'max-h-12'}`} style={{'height':`${isScrolled ? '0px' : '40px'}`}}> 
+        <div className='container mx-auto text-center py-2.5 px-4 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4'>
+          <div className='text-[10px] leading-tight font-light tracking-wider'>
+          Enjoy FREE shipping with every single order. 🔥 
+          </div>
+          <div className='text-[10px] leading-tight font-light tracking-wider'>
+          Enjoy FREE shipping with every single order. 🔥 
+          </div>
+          <div className='text-[10px] leading-tight  font-light tracking-wider'>
+          Enjoy FREE shipping with every single order. 🔥 
+          </div>
+          <div className='text-[10px] leading-tight   font-light tracking-wider'>
+          Enjoy FREE shipping with every single order. 🔥 
+          </div>
+        </div>
+      </div>
+      {/* Main Header */}
+      <header className={`header transition-all duration-500 ease-in-out border-b ${isScrolled ? 'bg-white/80 backdrop-blur-lg shadom-sm border-transparent' : ''} `}>
+       <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
+         <strong>{shop.name}</strong>
+       </NavLink>
+       <HeaderMenu
+         menu={menu}
+         viewport="desktop"
+         primaryDomainUrl={header.shop.primaryDomain.url}
+         publicStoreDomain={publicStoreDomain}
+       />
+       <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
     </header>
-  );
+    </div>
+  )
+  // return (
+  //   <header className="header">
+  //     <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
+  //       <strong>{shop.name}</strong>
+  //     </NavLink>
+  //     <HeaderMenu
+  //       menu={menu}
+  //       viewport="desktop"
+  //       primaryDomainUrl={header.shop.primaryDomain.url}
+  //       publicStoreDomain={publicStoreDomain}
+  //     />
+  //     <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
+  //   </header>
+  // );
 }
 
 /**

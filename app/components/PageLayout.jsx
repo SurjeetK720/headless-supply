@@ -9,6 +9,8 @@ import {
   SearchFormPredictive,
 } from '~/components/SearchFormPredictive';
 import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
+import HeroBanner from './HeroBanner';
+import ProductSlider from './ProductSlider';
 
 /**
  * @param {PageLayoutProps}
@@ -34,7 +36,10 @@ export function PageLayout({
           publicStoreDomain={publicStoreDomain}
         />
       )}
-      <main>{children}</main>
+      
+      <main>
+        {children}
+        </main>
       <Footer
         footer={footer}
         header={header}
